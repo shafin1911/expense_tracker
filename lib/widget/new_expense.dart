@@ -1,4 +1,6 @@
 import 'package:expense_tracker/models/expense.dart';
+import 'package:expense_tracker/widget/input_fields/custom_date_selector.dart';
+import 'package:expense_tracker/widget/input_fields/custom_input.dart';
 import 'package:flutter/material.dart';
 
 class NewExpense extends StatefulWidget {
@@ -76,95 +78,146 @@ class _NewExpenseState extends State<NewExpense> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-      child: Column(
-        children: [
-          TextField(
-            controller: _titleTextEditController,
-            maxLength: 50,
-            decoration: const InputDecoration(
-              label: Text("Title"),
+    final keyboardSpace = MediaQuery.of(context).viewInsets.bottom;
+
+    final Widget footerButtons = Row(
+      children: [
+        const Spacer(),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Cancel'),
+        ),
+        const SizedBox(
+          width: 18,
+        ),
+        ElevatedButton(
+          onPressed: () {
+            _submitExpenseData(context);
+          },
+          child: const Text('Save Expense'),
+        ),
+      ],
+    );
+
+    return LayoutBuilder(builder: (ctx, constraints) {
+      final width = constraints.maxWidth;
+      return SizedBox(
+        height: double.infinity,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16, 24, 16, keyboardSpace + 16),
+            child: Column(
+              children: [
+                if (width > 600)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomInput(
+                        title: 'Title',
+                        textEditController: _titleTextEditController,
+                      ),
+                      const SizedBox(width: 24),
+                      CustomInput(
+                        title: 'Amount',
+                        prefix: '\$ ',
+                        textEditController: _amountTextEditController,
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      CustomInput(
+                        title: 'Title',
+                        textEditController: _titleTextEditController,
+                      ),
+                    ],
+                  ),
+                if (width > 600)
+                  Row(
+                    children: [
+                      DropdownButton(
+                        items: Category.values
+                            .map(
+                              (category) => DropdownMenuItem(
+                                value: category,
+                                child: Text(
+                                  category.name.toUpperCase(),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            _selectedCategory = value;
+                          });
+                        },
+                        value: _selectedCategory,
+                      ),
+                      const SizedBox(
+                        width: 34,
+                      ),
+                      CustomDateSelector(
+                        selectedDate: _selectedDate,
+                        onPressDatePicker: _presentDatePicker,
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    children: [
+                      CustomInput(
+                        title: 'Amount',
+                        prefix: '\$ ',
+                        textEditController: _amountTextEditController,
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      CustomDateSelector(
+                        selectedDate: _selectedDate,
+                        onPressDatePicker: _presentDatePicker,
+                      ),
+                    ],
+                  ),
+                const SizedBox(
+                  height: 16,
+                ),
+                if (width > 600)
+                  footerButtons
+                else
+                  Row(
+                    children: [
+                      DropdownButton(
+                        items: Category.values
+                            .map(
+                              (category) => DropdownMenuItem(
+                                value: category,
+                                child: Text(
+                                  category.name.toUpperCase(),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            _selectedCategory = value;
+                          });
+                        },
+                        value: _selectedCategory,
+                      ),
+                      Expanded(child: footerButtons),
+                    ],
+                  ),
+              ],
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _amountTextEditController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    prefix: Text("\$ "),
-                    label: Text("Amount"),
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 16,
-              ),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      _selectedDate != null
-                          ? formatter.format(_selectedDate!)
-                          : 'No Date Selected',
-                    ),
-                    IconButton(
-                      onPressed: _presentDatePicker,
-                      icon: const Icon(Icons.date_range),
-                    )
-                  ],
-                ),
-              )
-            ],
-          ),
-          const SizedBox(
-            height: 16,
-          ),
-          Row(
-            children: [
-              DropdownButton(
-                items: Category.values
-                    .map(
-                      (category) => DropdownMenuItem(
-                        value: category,
-                        child: Text(
-                          category.name.toUpperCase(),
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    _selectedCategory = value;
-                  });
-                },
-                value: _selectedCategory,
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-              const SizedBox(
-                width: 18,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _submitExpenseData(context);
-                },
-                child: const Text('Save Expense'),
-              ),
-            ],
-          )
-        ],
-      ),
-    );
+        ),
+      );
+    });
   }
 }
